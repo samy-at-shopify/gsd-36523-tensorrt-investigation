@@ -7,16 +7,16 @@ We first learned about TensorRT through [this WxM post](https://shopify.workplac
 
 ### Glossary
 ##### Disclaimer: these aren't strict definitions - they are just here to convey what I mean when I use certain technical terms
-- Deep Learning: the subdiscipline of Machine Learning involving deep neural networks (i.e., those with > 1 layer).
-- Inference: the process of providing a machine learning model with some input and obtaining its output.
-- Model: a machine learning model (not a model in the MVC sense). 
-- TensorRT: an open-source deep learning framework made by Nvidia that aims to speed up deep neural networks' inference by optimizing different layers (e.g., fusing adjacent layers when possible).
-- TensorRT engine: a file (or object in memory) representing a deep learning model that has been optimized with TensorRT. 
-- Onnx: a machine learning framework with APIs in different languages and many backends that also allows to speed up deep neural networks' inference. Also comes with its own model format (.onnx). 
-- Onnxruntime and Onnxruntime-gpu: The libraries required to run inference using an .onnx model.
+- **Deep Learning**: the subdiscipline of Machine Learning involving deep neural networks (i.e., those with > 1 layer).
+- **Inference**: the process of providing a machine learning model with some input and obtaining its output.
+- **Model**: a machine learning model (not a model in the MVC sense). 
+- **TensorRT**: an open-source deep learning framework made by Nvidia that aims to speed up deep neural networks' inference by optimizing different layers (e.g., fusing adjacent layers when possible).
+- **TensorRT engine**: a file (or object in memory) representing a deep learning model that has been optimized with TensorRT. 
+- **Onnx**: a machine learning framework with APIs in different languages and many backends that also allows to speed up deep neural networks' inference. Also comes with its own model format (.onnx). 
+- **Onnxruntime and Onnxruntime-gpu**: The libraries required to run inference using an .onnx model without/with a Nvidia CUDA GPU.
 
 
-#### Getting started with TensorRT
+### Getting started with TensorRT
 I followed [this guide](https://developer.nvidia.com/blog/simplifying-and-accelerating-machine-learning-predictions-in-apache-beam-with-nvidia-tensorrt/) to create a TensorRT engine from our ML model's .onnx file. This involved:
 
 1. Creating a GCE instance with a Nvidia T4 GPU and CUDA toolkit and drivers
@@ -25,6 +25,91 @@ I followed [this guide](https://developer.nvidia.com/blog/simplifying-and-accele
 4. Building a Dockerfile based on Nvidia's official TensorRT images
 5. Using the `trtexec` tool to create a TensorRT engine from the .onnx file (all from within the Nvidia/TensorRT Docker container)
 
+##### Running `nvidia-smi` in the GCE instance
+
+```bash
+Thu Feb 15 23:44:18 2024       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 510.47.03    Driver Version: 510.47.03    CUDA Version: 11.6     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla T4            Off  | 00000000:00:04.0 Off |                    0 |
+| N/A   63C    P0    27W /  70W |      0MiB / 15360MiB |     11%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+```
+
+##### Running `nvidia-smi` in the Docker container
+
+```bash
+Thu Feb 15 23:44:13 2024       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 510.47.03    Driver Version: 510.47.03    CUDA Version: 11.8     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Tesla T4            Off  | 00000000:00:04.0 Off |                    0 |
+| N/A   63C    P0    27W /  70W |      0MiB / 15360MiB |     11%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+```
+
+##### Contents of the Dockerfile I used instead of the suggested `tensor_rt.dockerfile`
+
+```docker
+ARG BUILD_IMAGE=nvcr.io/nvidia/tensorrt:22.09-py3
+
+FROM ${BUILD_IMAGE}
+
+ENV PATH="/usr/src/tensorrt/bin:${PATH}"
+
+WORKDIR /workspace
+
+RUN pip install --upgrade pip \
+    && pip install torch>=1.7.1 \
+    && pip install torchvision>=0.8.2 \
+    && pip install pillow>=8.0.0 \
+    && pip install transformers>=4.18.0 \
+    && pip install cuda-python
+
+ENTRYPOINT [ "bash" ]
+````
+
+##### Building the TensorRT engine
+
+```bash
+trtexec --onnx=/mnt/models/csam_model.onnx \
+  --minShapes=input:1x384x384x3 \
+  --optShapes=input:10x384x384x3 \
+  --maxShapes=input:32x384x384x3 \
+  --shapes=input:10x384x384x3 \
+  --saveEngine=/mnt/tensorrt_engines/csam_model.onnx.batch1_to_32.trt \
+  --useCudaGraph \
+  --verbose
+```
+
 ##### Notes:
 - The TensorRT python package allows to create a TensorRT engine from a .onnx file - I could have used that instead of the `trtexec` tool
-- A TensorRT engine is 
+
+### Benchmarking TensorRT 
