@@ -5,6 +5,22 @@ The ML model in question is an EfficientNetV2 model that was trained by Thorn an
 
 We first learned about TensorRT through [this WxM post](https://shopify.workplace.com/groups/mlacc/permalink/968902058176200/), and saw blog posts touting that inference with a TensorRT engine was > [4x](https://beam.apache.org/documentation/ml/tensorrt-runinference/) or [9x](https://developer.nvidia.com/blog/simplifying-and-accelerating-machine-learning-predictions-in-apache-beam-with-nvidia-tensorrt/) faster than Tensorflow model.
 
+### TL;DR
+
+Inference speed for pre-trained EfficientNetV2 model:
+
+| setup | on batches of 10 384x384x3 images | on batches of 32 384x384x3 images |
+|-------|-----------------------------------|-----------------------------------|
+| TensorRT engine + GPU | min=0.0666 s      | min=0.206 s                       |
+|                       | med=0.0684 s      | med=0.207 s                       |
+|                       | max=0.699 s       | max=0.887 s                       |
+| Onnxruntime-gpu + GPU + TensorrtExecutionProvider | min=0. s      | min=0. s                       |
+|                                                   | med=0. s      | med=0. s                       |
+|                                                   | max=0. s      | max=0. s                       |
+| Onnxruntime-gpu + GPU + CUDAExecutionProvider | min=0. s      | min=0. s                       |
+|                                               | med=0. s      | med=0. s                       |
+|                                               | max=0. s      | max=0. s                       |
+
 ### Glossary
 ##### Disclaimer: these aren't strict definitions - they are just here to convey what I mean when I use certain technical terms
 - **Deep Learning**: the subdiscipline of Machine Learning involving deep neural networks (i.e., those with > 1 layer).
@@ -46,6 +62,12 @@ RUN pip install --upgrade pip \
 
 ENTRYPOINT [ "bash" ]
 ````
+
+##### Building the Docker container:
+
+```bash
+docker build -f tensor_rt.dockerfile -t tensor_rt 
+```
 
 ##### Building the TensorRT engine
 
@@ -223,4 +245,32 @@ Output:
     min=0.2056584358215332, max=0.8869142532348633, med=0.20708370208740234
 -   `images_per_batch=10`:   runtime on 10 images:
     min=0.06661248207092285, max=0.6989891529083252, med=0.0684133768081665
+
+
+### Benchmarking `onnxruntime-gpu`
+I created a separate dockerfile to test out our .onnx model's inference speed using only `onnxruntime-gpu`.
+
+##### Contents of the Dockerfile:
+
+```docker
+ARG BUILD_IMAGE=nvcr.io/nvidia/tensorrt:22.09-py3
+
+FROM ${BUILD_IMAGE} 
+
+ENV PATH="/usr/src/tensorrt/bin:${PATH}"
+
+WORKDIR /workspace
+
+RUN pip install --upgrade pip \
+    && pip install torch>=1.7.1 \
+    && pip install torchvision>=0.8.2 \
+    && pip install pillow>=8.0.0 \
+    && pip install transformers>=4.18.0 \
+    && pip install cuda-python \
+    && pip install onnx \
+    && pip install onnxruntime-gpu
+
+ENTRYPOINT [ "bash" ]
+```
+
 
