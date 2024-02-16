@@ -40,7 +40,7 @@ Inference speed for pre-trained EfficientNetV2 model:
 ### Getting started with TensorRT
 I followed [this guide](https://developer.nvidia.com/blog/simplifying-and-accelerating-machine-learning-predictions-in-apache-beam-with-nvidia-tensorrt/) to create a TensorRT engine from our ML model's .onnx file. This involved:
 
-1. Creating a GCE instance with a Nvidia T4 GPU and CUDA toolkit and drivers (see this video: https://videobin.shopify.io/v/e6oVbP)
+1. Creating a GCE instance with a Nvidia T4 GPU and CUDA toolkit and drivers (see this video: https://videobin.shopify.io/v/e6oVbP, or [this GCE VM image](https://console.cloud.google.com/compute/machineImages/details/gsd36523-tensorrt-vm-with-gpu-image?project=shopify-commerce-trust))
 2. Creating a Firewall rule to ssh into the GCE instance
 3. Uploading the .onnx file to the GCE instance
 4. Building a Dockerfile based on Nvidia's official TensorRT images
