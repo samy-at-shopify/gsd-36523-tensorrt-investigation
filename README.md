@@ -1,5 +1,8 @@
 ## What's this?
-This repo summarizes my investigation into whether `TensorRT` could speed up a machine learning (ML) model's inference.
+This repo summarizes my investigation into whether `TensorRT` could speed up a machine learning (ML) model's inference. The alternatives we considered were:
+
+1. Running inference with the .onnx model on a GPU with the CUDAExecutionProvider
+2. Running inference with the .onnx model on a GPU with the TensorrtExecutionProvider
 
 The ML model in question is an EfficientNetV2 model that was trained by Thorn and procured during [GSD#36523](https://vault.shopify.io/gsd/projects/36523).
 
