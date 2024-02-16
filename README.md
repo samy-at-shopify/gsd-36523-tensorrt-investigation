@@ -14,12 +14,12 @@ Inference speed for pre-trained EfficientNetV2 model:
 | TensorRT engine + GPU | min=0.0666 s      | min=0.206 s                       |
 |                       | med=0.0684 s      | med=0.207 s                       |
 |                       | max=0.699 s       | max=0.887 s                       |
-| Onnxruntime-gpu + GPU + TensorrtExecutionProvider | min=0. s      | min=0. s                       |
-|                                                   | med=0. s      | med=0. s                       |
-|                                                   | max=0. s      | max=0. s                       |
-| Onnxruntime-gpu + GPU + CUDAExecutionProvider | min=0. s      | min=0. s                       |
-|                                               | med=0. s      | med=0. s                       |
-|                                               | max=0. s      | max=0. s                       |
+| Onnxruntime-gpu + GPU + TensorrtExecutionProvider | min=0.0676 s      | min=0.207 s                       |
+|                                                   | med=0.0684 s      | med=0.208 s                       |
+|                                                   | max=86.057 s      | max=64.94 s                       |
+| Onnxruntime-gpu + GPU + CUDAExecutionProvider | min=0.0808 s      | min=0.2496 s                       |
+|                                               | med=0.0830 s      | med=0.252 s                       |
+|                                               | max=4.856 s      | max=8.078 s                       |
 
 ### Glossary
 ##### Disclaimer: these aren't strict definitions - they are just here to convey what I mean when I use certain technical terms
