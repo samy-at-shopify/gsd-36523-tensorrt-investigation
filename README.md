@@ -143,11 +143,11 @@ I spun up my TensorRT container using:
 docker run --rm -it --gpus all -v /home/samy_coulombe/:/mnt tensor_rt
 ```
 
-And ran the [following python code](https://github.com/samy-at-shopify/gsd-36523-tensorrt-investigation/blob/main/benchmarking_tensorrt_engine_gpu.py) from a Python shell.
+And ran the [following Python code](https://github.com/samy-at-shopify/gsd-36523-tensorrt-investigation/blob/main/benchmarking_tensorrt_engine_gpu.py) from a Python shell.
 
 
 ### Benchmarking `onnxruntime-gpu`
-I created a separate dockerfile to test out our .onnx model's inference speed using only `onnxruntime-gpu`.
+I created a separate dockerfile to test out our .onnx model's inference speed using only `onnxruntime-gpu`, and ran the [following Python code](https://github.com/samy-at-shopify/gsd-36523-tensorrt-investigation/blob/main/benchmarking_onnxruntime_gpu.py) from a Python shell.
 
 ##### Contents of the Dockerfile:
 
@@ -170,40 +170,4 @@ RUN pip install --upgrade pip \
     && pip install onnxruntime-gpu
 
 ENTRYPOINT [ "bash" ]
-```
-
-#### Benchmarking `onnxruntime-gpu`
-
-```python
-from time import time 
-
-import onnx
-import numpy as np
-import onnxruntime as ort
-
-# load and check model
-onnx_model_filepath = "/mnt/models/csam_model.onnx"
-onnx_model = onnx.load(onnx_model_filepath)
-onnx.checker.check_model(onnx_model)
-
-# setup inference session 
-ort_sess = ort.InferenceSession(onnx_model_filepath, providers=['CUDAExecutionProvider'])
-
-# setup inference experiments
-batch_size = 10
-np.random.seed(42)
-sample_images = np.random.rand(batch_size, 384, 384, 3).astype(np.float32)
-payload = { "input_1": sample_images}
-
-num_repeats = 10
-inference_runtimes = np.zeros(num_repeats,)
-for i in range(10):
-    start = time()
-    output = ort_sess.run(None, payload)
-    inference_runtimes[i] = (time() - start)
-
-print(output)
-print(f"runtime on {batch_size} images:\nmin={inference_runtimes.min()}, max={inference_runtimes.max()}, med={np.median(inference_runtimes)}")
-print(ort.get_device())
-
 ```
