@@ -240,11 +240,6 @@ cuda_driver_context.pop()
 exit()
 ```
 
-Output: 
-- `images_per_batch=32`:     runtime on 32 images:
-    min=0.2056584358215332, max=0.8869142532348633, med=0.20708370208740234
--   `images_per_batch=10`:   runtime on 10 images:
-    min=0.06661248207092285, max=0.6989891529083252, med=0.0684133768081665
 
 
 ### Benchmarking `onnxruntime-gpu`
@@ -273,4 +268,38 @@ RUN pip install --upgrade pip \
 ENTRYPOINT [ "bash" ]
 ```
 
+#### Benchmarking `onnxruntime-gpu`
 
+```python
+from time import time 
+
+import onnx
+import numpy as np
+import onnxruntime as ort
+
+# load and check model
+onnx_model_filepath = "/mnt/models/csam_model.onnx"
+onnx_model = onnx.load(onnx_model_filepath)
+onnx.checker.check_model(onnx_model)
+
+# setup inference session 
+ort_sess = ort.InferenceSession(onnx_model_filepath, providers=['CUDAExecutionProvider'])
+
+# setup inference experiments
+batch_size = 10
+np.random.seed(42)
+sample_images = np.random.rand(batch_size, 384, 384, 3).astype(np.float32)
+payload = { "input_1": sample_images}
+
+num_repeats = 10
+inference_runtimes = np.zeros(num_repeats,)
+for i in range(10):
+    start = time()
+    output = ort_sess.run(None, payload)
+    inference_runtimes[i] = (time() - start)
+
+print(output)
+print(f"runtime on {batch_size} images:\nmin={inference_runtimes.min()}, max={inference_runtimes.max()}, med={np.median(inference_runtimes)}")
+print(ort.get_device())
+
+```
