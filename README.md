@@ -78,10 +78,10 @@ docker build -f tensor_rt.dockerfile -t tensor_rt
 
 ```bash
 trtexec --onnx=/mnt/models/csam_model.onnx \
-  --minShapes=input:1x384x384x3 \
-  --optShapes=input:10x384x384x3 \
-  --maxShapes=input:32x384x384x3 \
-  --shapes=input:10x384x384x3 \
+  --minShapes=input_1:1x384x384x3 \
+  --optShapes=input_1:10x384x384x3 \
+  --maxShapes=input_1:32x384x384x3 \
+  --shapes=input_1:10x384x384x3 \
   --saveEngine=/mnt/tensorrt_engines/csam_model.onnx.batch1_to_32.trt \
   --useCudaGraph \
   --verbose
