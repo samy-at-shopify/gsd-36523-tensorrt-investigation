@@ -71,7 +71,7 @@ ENTRYPOINT [ "bash" ]
 ##### Building the Docker container:
 
 ```bash
-docker build -f tensor_rt.dockerfile -t tensor_rt 
+docker build -f tensor_rt.dockerfile -t tensor_rt .
 ```
 
 ##### Building the TensorRT engine
