@@ -10,7 +10,7 @@ We first learned about TensorRT through [this WxM post](https://shopify.workplac
 
 ## TL;DR
 
-We didn't see much improvement with converting our .onnx model to a TensorRT engine. However, we did see a ~2x speedup when we used 16-bit floating point quantization (even more when dealing with batches of 32 images!).
+We didn't see much improvement with converting our .onnx model to a TensorRT engine. However, we did see a ~3x speedup when we used 16-bit floating point quantization (even more when dealing with batches of 32 images!).
 
 Inference speed for pre-trained EfficientNetV2 model:
 
